@@ -1,3 +1,3 @@
 
-def dcci():
-    print("Hello, World!")
+def Dccix2(img):
+    return img
