@@ -4,7 +4,7 @@ import packages.dcci as dcci
 
 # Init
 window_name = ""
-file = "./resources/link.png"
+file = "./resources/bonzai.tif"
 
 img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
 img2 = dcci.Dccix2(img)
