@@ -4,7 +4,7 @@ import packages.dcci as dcci
 
 # Init
 window_name = ""
-file = "link.png"
+file = "./resources/link.png"
 
 img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
 img2 = dcci.Dccix2(img)
