@@ -55,7 +55,15 @@ def Dccix2(img):
     return np.uint8(np.round(imgOutPadded[6:-6, 6:-6]/16))
 
 def classifyDiag(s):
-    return DiagClassification.UP_RIGHT
+    d1 = np.sum(np.abs(s[1:,:-1] - s[:-1,1:]))
+    d2 = np.sum(np.abs(s[1:,1:] - s[:-1,:-1]))
+
+    if (1+d1)/(1+d2) > 1.15:
+        return DiagClassification.UP_RIGHT
+    elif (1+d2)/(1+d1) > 1.15:
+        return DiagClassification.DOWN_RIGHT
+    else:
+        return DiagClassification.SMOOTH
 
 def classifyOrth(s):
     return OrthClassification.HORIZONTAL
