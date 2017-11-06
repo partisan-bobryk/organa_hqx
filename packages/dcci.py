@@ -37,7 +37,9 @@ def Dccix2(img):
 
             # Add diagonal pixels to both the output and replace the pixels in s
             imgOutPadded[2*y+1:2*y+1+5:2,2*x+1:2*x+1+5:2] += diag[1:6:2, 1:6:2]
-            s[1:6:2, 1:6:2] = s[1:6:2, 1:6:2]
+            s2 = np.zeros((7,7), type=np.uint8)
+            s2[::2,::2] = s
+            s2[1:6:2, 1:6:2] = diag[1:6:2, 1:6:2]
 
             orth = None
             orthClass = classifyOrth(s)
@@ -54,34 +56,50 @@ def Dccix2(img):
 
     return np.uint8(np.round(imgOutPadded[6:-6, 6:-6]/16))
 
+# Input: 4x4 area
+# Output: Classification
 def classifyDiag(s):
     d1 = np.sum(np.abs(s[1:,:-1] - s[:-1,1:]))
     d2 = np.sum(np.abs(s[1:,1:] - s[:-1,:-1]))
 
-    if (1+d1)/(1+d2) > 1.15:
+    if (1+d1) > 1.15 * (1+d2):
         return DiagClassification.UP_RIGHT
-    elif (1+d2)/(1+d1) > 1.15:
+    elif (1+d2) > 1.15 * (1+d1):
         return DiagClassification.DOWN_RIGHT
     else:
         return DiagClassification.SMOOTH
 
+# Input: 7x7 area
+# Output: Classification
 def classifyOrth(s):
     return OrthClassification.HORIZONTAL
 
+# Input: 4x4 area
+# Output: 7x7 interpolated area (Only diagonals used)
 def upRight(s):
     return np.zeros((7,7)) + 255
 
+# Input: 4x4 area
+# Output: 7x7 interpolated area (Only diagonals used)
 def downRight(s):
     return np.zeros((7,7)) + 255
 
+# Input: 4x4 area
+# Output: 7x7 interpolated area (Only diagonals used)
 def diagSmooth(s):
     return np.zeros((7,7)) + 255
 
+# Input: 7x7 area
+# Output: 7x7 interpolated area (Only orthogonals used)
 def horizontal(s):
     return np.zeros((7,7)) + 255
 
+# Input: 7x7 area
+# Output: 7x7 interpolated area (Only orthogonals used)
 def vertical(s):
     return np.zeros((7,7)) + 255
 
+# Input: 7x7 area
+# Output: 7x7 interpolated area (Only orthogonals used)
 def orthSmooth(s):
     return np.zeros((7,7)) + 255
