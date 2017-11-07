@@ -119,12 +119,14 @@ def diagSmooth(s,d1,d2):
 # Input: 7x7 area
 # Output: 7x7 interpolated area (Only orthogonals used)
 def horizontal(s):
-    return np.zeros((7,7)) + 255
+    x, y = 3,3
+    return (-1 * s[x, y-3] + 9 * s[x, y-1] + 9 * s[x, y+1] - 1 * s[x, y + 3]) / 16
 
 # Input: 7x7 area
 # Output: 7x7 interpolated area (Only orthogonals used)
 def vertical(s):
-    return np.zeros((7,7)) + 255
+    x, y = 3, 3
+    return (-1 * s[x-3, y] + 9 * s[x - 1, y] + 9 * s[x + 1, y] - 1 * s[x + 3, y]) / 16
 
 # Input: 7x7 area
 # Output: 7x7 interpolated area (Only orthogonals used)
