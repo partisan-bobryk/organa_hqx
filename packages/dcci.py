@@ -26,14 +26,14 @@ def Dccix2(img):
             # Add Original Pixels
             imgOutPadded[2*y:2*y+7:2, 2*x:2*x+7:2] += s
 
-            diagClass = classifyOrth(s)
+            diagClass, d1, d2 = classifyOrth(s)
             diag = None
             if diagClass == DiagClassification.UP_RIGHT:
                 diag = upRight(s)
             elif diagClass == DiagClassification.DOWN_RIGHT:
                 diag = downRight(s)
             else:
-                diag = diagSmooth(s)
+                diag = diagSmooth(s, d1, d2)
 
             # Add diagonal pixels to both the output and replace the pixels in s
             imgOutPadded[2*y+1:2*y+1+5:2,2*x+1:2*x+1+5:2] += diag[1:6:2, 1:6:2]
@@ -43,7 +43,7 @@ def Dccix2(img):
 
             # Match classification and interpolate
             orth = None
-            orthClass = classifyOrth(s2)
+            orthClass, d1, d2 = classifyOrth(s2)
             if orthClass == OrthClassification.HORIZONTAL:
                 orth = horizontal(s2)
             elif orthClass == OrthClassification.VERTICAL:
@@ -64,11 +64,11 @@ def classifyDiag(s):
     d2 = np.sum(np.abs(s[1:,1:] - s[:-1,:-1]))
 
     if (1+d1) > 1.15 * (1+d2):
-        return DiagClassification.UP_RIGHT
+        return DiagClassification.UP_RIGHT, d1, d2
     elif (1+d2) > 1.15 * (1+d1):
-        return DiagClassification.DOWN_RIGHT
+        return DiagClassification.DOWN_RIGHT, d1, d2
     else:
-        return DiagClassification.SMOOTH
+        return DiagClassification.SMOOTH, d1, d2
 
 # Input: 7x7 area
 # Output: Classification
@@ -78,28 +78,43 @@ def classifyOrth(s2):
 
     # Avoiding floating point error
     if (100 * (1 + d1) > 115 * (1 + d2)):
-        return OrthClassification.HORIZONTAL
+        return OrthClassification.HORIZONTAL, d1, d2
     elif (100 * (1 + d2) > 115 * (1 + d1)):
-        return OrthClassification.VERTICAL
+        return OrthClassification.VERTICAL, d1, d2
     else:
-        return OrthClassification.SMOOTH
+        return OrthClassification.SMOOTH, d1, d2
 
 
 
 # Input: 4x4 area
 # Output: 7x7 interpolated area (Only diagonals used)
 def upRight(s):
-    return np.zeros((7,7)) + 255
+    #(-1 * P(0, 0) + 9 * P(1, 1) + 9 * P(2, 2) - 1 * P(3, 3)) / 16
+    op = (-1. * s[0,0] + 9. * s[1,1] + (-1.0)*s[3,3]) / 16.0
+    return op
 
 # Input: 4x4 area
 # Output: 7x7 interpolated area (Only diagonals used)
 def downRight(s):
-    return np.zeros((7,7)) + 255
+    #Output pixel = (-1 * P(3, 0) + 9 * P(2, 1) + 9 * P(1, 2) - 1 * P(0, 3)) / 16
+    op = ((-1.)*s[0,3] + 9. * s[2,1] + (-1.)*s[3,0] ) / 16.0
+    return op
 
 # Input: 4x4 area
 # Output: 7x7 interpolated area (Only diagonals used)
-def diagSmooth(s):
-    return np.zeros((7,7)) + 255
+def diagSmooth(s,d1,d2):
+
+    w1 = 1.0 / (1.0 + d1**5.0)
+    w2 = 1.0 / (1.0 + d2**5.0)
+    weight1 = w1 / (w1 + w2)
+    weight2 = w2 / (w1 + w2)
+
+    downRightPixel = (-1 * s[0,0] + 9 * s[1, 1] + 9. * s[2, 2] - 1 * s[3, 3]) / 16.
+    upRightPixel = (-1. * s[0, 3] + 9. * s[1, 2] + 9. * s[2, 1] - 1. * s[3, 0]) / 16.
+
+    op = downRightPixel * weight1 + upRightPixel * weight2
+
+    return op
 
 # Input: 7x7 area
 # Output: 7x7 interpolated area (Only orthogonals used)
