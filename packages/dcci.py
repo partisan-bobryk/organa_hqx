@@ -130,5 +130,16 @@ def vertical(s):
 
 # Input: 7x7 area
 # Output: 7x7 interpolated area (Only orthogonals used)
-def orthSmooth(s):
-    return np.zeros((7,7)) + 255
+def orthSmooth(s, d1, d2):
+    x,y = 3, 3
+    w1 = 1.0 / (1.0 + d1 ** 5.0)
+    w2 = 1.0 / (1.0 + d2 ** 5.0)
+    weight1 = w1 / (w1 + w2)
+    weight2 = w2 / (w1 + w2)
+
+    horizontalPixel = (-1 * s[x-3, y] + 9 * s[x-1, y] + 9. * s[x+1, y] - 1 * s[x+3, y]) / 16.
+    veritcalPixel = (-1. * s[x, y-3] + 9. * s[x, y-1] + 9. * s[x, y+1] - 1. * s[x, y+3]) / 16.
+
+    op = horizontalPixel * weight1 + veritcalPixel * weight2
+
+    return op
