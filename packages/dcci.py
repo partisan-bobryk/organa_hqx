@@ -12,50 +12,69 @@ class OrthClassification(Enum):
     SMOOTH     = 3
 
 def Dccix2(img):
-    ly, lx = img.shape
+    img2 = np.swapaxes(img, 0, 1)
 
-    imgPadded = np.zeros((ly+6, lx+6), dtype=np.uint8)
-    imgPadded[3:-3,3:-3] = img
+    lx, ly = img2.shape
+    imgInterp = np.zeros((lx*2-1, ly*2-1))
+    imgInterp[::2,::2] = img2
 
-    imgOutPadded = np.zeros((ly*2+12, lx*2+12))
+    imgInterp = interpDiag(imgInterp)
+    imgInterp = interpOrth(imgInterp)
+    return np.swapaxes(imgInterp, 0, 1)
 
-    for x in range(0, lx+3):
-        for y in range(0, ly+3):  
-            s = imgPadded[y:y+4, x:x+4]
+# Input: The 2x image with black space padding each of the given pixels
+# Output: The same image with the diagonal non-edge pixels interpolated
+def interpDiag(img):
+    lx, ly = img.shape
+    imgPadded = np.zeros((lx+4,ly+4))# Pad by 1 given pixel (2 real pixels)
+    imgPadded[2:-2,2:-2] = img
 
-            # Add Original Pixels
-            imgOutPadded[2*y:2*y+7:2, 2*x:2*x+7:2] += s
-
-            diagClass, d1, d2 = classifyOrth(s)
-            diag = None
+    # Center at the point to be interpolated, (x,y)
+    for x in range(3, lx+1, 2):
+        for y in range(3, ly+1, 2):  
+            s4x4 = imgPadded[x-3:x+4:2,y-3:y+4:2]
+            
+            d1, d2, diagClass = classifyDiag(s4x4)
             if diagClass == DiagClassification.UP_RIGHT:
-                diag = upRight(s)
+                imgPadded[x,y] = upRight(s4x4)
             elif diagClass == DiagClassification.DOWN_RIGHT:
-                diag = downRight(s)
+                imgPadded[x,y] = downRight(s4x4)
             else:
-                diag = diagSmooth(s, d1, d2)
+                imgPadded[x,y] = diagSmooth(s4x4, d1, d2)
 
-            # Add diagonal pixels to both the output and replace the pixels in s
-            imgOutPadded[2*y+1:2*y+1+5:2,2*x+1:2*x+1+5:2] += diag[1:6:2, 1:6:2]
-            s2 = np.zeros((7,7), dtype=np.uint8)
-            s2[::2,::2] = s
-            s2[1:6:2, 1:6:2] = diag[1:6:2, 1:6:2]
+    return imgPadded[2:-2,2:-2]
 
-            # Match classification and interpolate
-            orth = None
-            orthClass, d1, d2 = classifyOrth(s2)
+def interpOrth(img):
+    lx, ly = img.shape
+    imgPadded = np.zeros((lx+6,ly+6))
+    imgPadded[3:-3,3:-3] = img
+    
+    # Center at the point to be interpolated, (x,y), as well as (x-1, y+1)
+    for x in range(4, lx+3, 2):
+        for y in range(3, ly+3, 2): 
+            s7x7 = imgPadded[x-3:x+4,y-3:y+4]
+            # Match classification and interpolate for x,y
+            orthClass, d1, d2 = classifyOrth(s7x7)
             if orthClass == OrthClassification.HORIZONTAL:
-                orth = horizontal(s2)
+                imgPadded[x,y] = horizontal(s7x7)
             elif orthClass == OrthClassification.VERTICAL:
-                orth = vertical(s2)
+                imgPadded[x,y] = vertical(s7x7)
             else:
-                orth = orthSmooth(s2)
+                imgPadded[x,y] = orthSmooth(s7x7, d1, d2)
 
-            # Replace orthogonal pixels
-            imgOutPadded[2*y:2*y+7:2, 2*x+1:2*x+1+5:2] += orth[0:7:2, 1:6:2]
-            imgOutPadded[2*y+1:2*y+1+5:2, 2*x:2*x+7:2] += orth[1:6:2, 0:7:2]
+    for x in range(3, lx+3, 2):
+        for y in range(4, ly+3, 2): 
+            s7x7 = imgPadded[x-3:x+4,y-3:y+4]
+            # Match classification and interpolate for x,y
+            orthClass, d1, d2 = classifyOrth(s7x7)
+            if orthClass == OrthClassification.HORIZONTAL:
+                imgPadded[x,y] = horizontal(s7x7)
+            elif orthClass == OrthClassification.VERTICAL:
+                imgPadded[x,y] = vertical(s7x7)
+            else:
+                imgPadded[x,y] = orthSmooth(s7x7, d1, d2)
 
-    return np.uint8(np.round(imgOutPadded[6:-6, 6:-6]/16))
+    return imgPadded[3:-3,3:-3]
 
 # Input: 4x4 area
 # Output: Classification
@@ -70,7 +89,7 @@ def classifyDiag(s):
     else:
         return DiagClassification.SMOOTH, d1, d2
 
-# Input: 7x7 area
+# Input: 7x7 padded "diamond" area
 # Output: Classification
 def classifyOrth(s2):
     d1 = np.sum(np.abs(s2[1:, -2:] - s2[-1:, -2:]))
@@ -116,19 +135,19 @@ def diagSmooth(s,d1,d2):
 
     return op
 
-# Input: 7x7 area
+# Input: 7x7 padded "diamond" area
 # Output: 7x7 interpolated area (Only orthogonals used)
 def horizontal(s):
     x, y = 3,3
     return (-1 * s[x, y-3] + 9 * s[x, y-1] + 9 * s[x, y+1] - 1 * s[x, y + 3]) / 16
 
-# Input: 7x7 area
+# Input: 7x7 padded "diamond" area
 # Output: 7x7 interpolated area (Only orthogonals used)
 def vertical(s):
     x, y = 3, 3
     return (-1 * s[x-3, y] + 9 * s[x - 1, y] + 9 * s[x + 1, y] - 1 * s[x + 3, y]) / 16
 
-# Input: 7x7 area
+# Input: 7x7 padded "diamond" area
 # Output: 7x7 interpolated area (Only orthogonals used)
 def orthSmooth(s, d1, d2):
     x,y = 3, 3
