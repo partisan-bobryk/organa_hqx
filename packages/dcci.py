@@ -34,7 +34,7 @@ def interpDiag(img):
         for y in range(3, ly+1, 2):  
             s4x4 = imgPadded[x-3:x+4:2,y-3:y+4:2]
             
-            d1, d2, diagClass = classifyDiag(s4x4)
+            diagClass,d1, d2 = classifyDiag(s4x4)
             if diagClass == DiagClassification.UP_RIGHT:
                 imgPadded[x,y] = upRight(s4x4)
             elif diagClass == DiagClassification.DOWN_RIGHT:
@@ -122,8 +122,7 @@ def downRight(s):
 # Input: 4x4 area
 # Output: 7x7 interpolated area (Only diagonals used)
 def diagSmooth(s,d1,d2):
-
-    w1 = 1.0 / (1.0 + d1**5.0)
+    w1 = 1.0 / (1.0 + d1**5)
     w2 = 1.0 / (1.0 + d2**5.0)
     weight1 = w1 / (w1 + w2)
     weight2 = w2 / (w1 + w2)
