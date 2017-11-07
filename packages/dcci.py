@@ -37,18 +37,19 @@ def Dccix2(img):
 
             # Add diagonal pixels to both the output and replace the pixels in s
             imgOutPadded[2*y+1:2*y+1+5:2,2*x+1:2*x+1+5:2] += diag[1:6:2, 1:6:2]
-            s2 = np.zeros((7,7), type=np.uint8)
+            s2 = np.zeros((7,7), dtype=np.uint8)
             s2[::2,::2] = s
             s2[1:6:2, 1:6:2] = diag[1:6:2, 1:6:2]
 
+            # Match classification and interpolate
             orth = None
-            orthClass = classifyOrth(s)
-            if diagClass == OrthClassification.HORIZONTAL:
-                orth = horizontal(s)
-            elif diagClass == OrthClassification.VERTICAL:
-                orth = vertical(s)
+            orthClass = classifyOrth(s2)
+            if orthClass == OrthClassification.HORIZONTAL:
+                orth = horizontal(s2)
+            elif orthClass == OrthClassification.VERTICAL:
+                orth = vertical(s2)
             else:
-                orth = orthSmooth(s)
+                orth = orthSmooth(s2)
 
             # Replace orthogonal pixels
             imgOutPadded[2*y:2*y+7:2, 2*x+1:2*x+1+5:2] += orth[0:7:2, 1:6:2]
@@ -71,8 +72,19 @@ def classifyDiag(s):
 
 # Input: 7x7 area
 # Output: Classification
-def classifyOrth(s):
-    return OrthClassification.HORIZONTAL
+def classifyOrth(s2):
+    d1 = np.sum(np.abs(s2[1:, -2:] - s2[-1:, -2:]))
+    d2 = np.sum(np.abs(s2[-2:, 1:] - s2[-2:, -1:]))
+
+    # Avoiding floating point error
+    if (100 * (1 + d1) > 115 * (1 + d2)):
+        return OrthClassification.HORIZONTAL
+    elif (100 * (1 + d2) > 115 * (1 + d1)):
+        return OrthClassification.VERTICAL
+    else:
+        return OrthClassification.SMOOTH
+
+
 
 # Input: 4x4 area
 # Output: 7x7 interpolated area (Only diagonals used)
