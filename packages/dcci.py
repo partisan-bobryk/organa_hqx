@@ -82,9 +82,9 @@ def classifyDiag(s):
     d1 = np.sum(np.abs(s[1:,:-1] - s[:-1,1:]))
     d2 = np.sum(np.abs(s[1:,1:] - s[:-1,:-1]))
 
-    if (1+d1) > 1.15 * (1+d2):
+    if (1+d1) > 115 * (1+d2):
         return DiagClassification.UP_RIGHT, d1, d2
-    elif (1+d2) > 1.15 * (1+d1):
+    elif (1+d2) > 115 * (1+d1):
         return DiagClassification.DOWN_RIGHT, d1, d2
     else:
         return DiagClassification.SMOOTH, d1, d2
@@ -96,9 +96,9 @@ def classifyOrth(s2):
     d2 = np.sum(np.abs(s2[-2:, 1:] - s2[-2:, -1:]))
 
     # Avoiding floating point error
-    if (100 * (1 + d1) > 115 * (1 + d2)):
+    if  (1 + d1) > 115 * (1 + d2):
         return OrthClassification.HORIZONTAL, d1, d2
-    elif (100 * (1 + d2) > 115 * (1 + d1)):
+    elif (1 + d2) > 115 * (1 + d1):
         return OrthClassification.VERTICAL, d1, d2
     else:
         return OrthClassification.SMOOTH, d1, d2
@@ -136,14 +136,12 @@ def diagSmooth(s,d1,d2):
 
 # Input: 7x7 padded "diamond" area
 # Output: 7x7 interpolated area (Only orthogonals used)
-def horizontal(s):
-    x, y = 3,3
+def horizontal(s, x=3, y=3):
     return (-1 * s[x, y-3] + 9 * s[x, y-1] + 9 * s[x, y+1] - 1 * s[x, y + 3]) / 16
 
 # Input: 7x7 padded "diamond" area
 # Output: 7x7 interpolated area (Only orthogonals used)
-def vertical(s):
-    x, y = 3, 3
+def vertical(s, x=3, y=3):
     return (-1 * s[x-3, y] + 9 * s[x - 1, y] + 9 * s[x + 1, y] - 1 * s[x + 3, y]) / 16
 
 # Input: 7x7 padded "diamond" area
