@@ -12,10 +12,8 @@ lenczos_time = time.time()
 window_name = "UpScaling"
 
 img = cv2.imread(imr.all[0], cv2.IMREAD_GRAYSCALE)[::2, ::2]
-img2 = dcci.Dccix2(np.float64(img))
+img2 = dcci.Dccix2(img)
 print('DCCI took {}'.format(dcci_time - time.time()))
-img2[img2 > 255] = 255
-img2[img2 < 0] = 0
 
 bicubic = cv2.resize(img, (0,0), fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
 print('Bicubic took {}'.format(bicubic_time - time.time()))

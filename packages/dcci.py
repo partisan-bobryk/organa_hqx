@@ -12,7 +12,7 @@ class OrthClassification(Enum):
     SMOOTH     = 3
 
 def Dccix2(img):
-    img2 = np.swapaxes(img, 0, 1)
+    img2 = np.float64(np.swapaxes(img, 0, 1))
 
     lx, ly = img2.shape
     imgInterp = np.zeros((lx*2-1, ly*2-1))
@@ -20,6 +20,11 @@ def Dccix2(img):
 
     imgInterp = interpDiag(imgInterp)
     imgInterp = interpOrth(imgInterp)
+
+    imgInterp[imgInterp < 0] = 0
+    imgInterp[imgInterp > 255] = imgInterp
+    imgInterp = np.uint8(np.round(imgInterp))
+    
     return np.swapaxes(imgInterp, 0, 1)
 
 # Input: The 2x image with black space padding each of the given pixels
