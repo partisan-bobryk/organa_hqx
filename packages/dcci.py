@@ -22,7 +22,7 @@ def Dccix2(img):
     imgInterp = interpOrth(imgInterp)
 
     imgInterp[imgInterp < 0] = 0
-    imgInterp[imgInterp > 255] = imgInterp
+    imgInterp[imgInterp > 255] = 255
     imgInterp = np.uint8(np.round(imgInterp))
     
     return np.swapaxes(imgInterp, 0, 1)

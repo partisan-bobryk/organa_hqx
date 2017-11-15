@@ -12,8 +12,7 @@ lenczos_time = time.time()
 window_name = "UpScaling"
 
 for file in imr.rpg_items:
-    print(file)
-    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)[::2, ::2]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     img2 = dcci.Dccix2(img)
     print('DCCI took {}'.format(dcci_time - time.time()))
 
