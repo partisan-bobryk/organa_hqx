@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import packages.dcci as dcci
-from img_resources import files
+from img_resources import all as files
 
 # Init
 window_name = "UpScaling"
