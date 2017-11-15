@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import time
 import packages.dcci as dcci
+import img_resources as imr
 
 dcci_time = time.time()
 bicubic_time = time.time()
@@ -9,12 +10,8 @@ lenczos_time = time.time()
 
 # Init
 window_name = "UpScaling"
-file1 = "./resources/link.png"
-file2 = "./resources/multi_grayscale_1_100x100.tif"
-file3 = "./resources/diagonal_left_100x100.tif"
-file4 = "./resources/peppers_color.tif"
 
-img = cv2.imread(file4, cv2.IMREAD_GRAYSCALE)[::2, ::2]
+img = cv2.imread(imr.all[0], cv2.IMREAD_GRAYSCALE)[::2, ::2]
 img2 = dcci.Dccix2(np.float64(img))
 print('DCCI took {}'.format(dcci_time - time.time()))
 img2[img2 > 255] = 255
