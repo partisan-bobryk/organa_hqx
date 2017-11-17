@@ -6,11 +6,12 @@ import img_resources as imr
 # Init
 window_name = "UpScaling"
 
-N = 2 # 2^N scaling
-# Ts, ks = range(100,151,5), range(1,7,1)# Used for testing T/k values
-Ts, ks = [115], [5] # Default T/k's; use for single/fast image
+N = 1 # 2^N scaling
+Ts, ks = range(100,151,5), range(1,7,1)# Used for testing T/k values
+# Ts, ks = [115], [5] # Default T/k's; use for single/fast image
 
-for file in imr.rpg_items:
+for file in imr.test_images[-1:]:
+    print(file)
     img = cv2.imread(file, cv2.IMREAD_COLOR)
     img2=np.array([])
     for k in ks:
@@ -36,6 +37,7 @@ for file in imr.rpg_items:
         else:
             img2 = np.concatenate((img2,img3), axis=0)
 
+    cv2.imwrite("./output/latest.png", img2)
     cv2.imshow(f"{window_name} - {file}", img2)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

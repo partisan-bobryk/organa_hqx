@@ -84,6 +84,7 @@ rpg_items = [
 pixel_art = [
     "./resources/bonzai.tif",
     "./resources/link.png",
+    "./resources/mario.png",
 ]
 pixel_art.extend(rpg_items)
 
@@ -94,6 +95,12 @@ test_images = [
     "./resources/grayscale_test_1.png",
     "./resources/multi_grayscale_1_100x100.tif",
     "./resources/plus_100x100.tif",
+
+    # Original HQX test images
+    "./resources/test_original.png",
+    "./resources/mailbox_original.png",
+    "./resources/randam_orig.png",
+    "./resources/sq_orig.png",
 ]
 
 real_life = [
