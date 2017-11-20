@@ -6,11 +6,11 @@ import img_resources as imr
 # Init
 window_name = "UpScaling"
 
-N = 1 # 2^N scaling
-Ts, ks = range(100,151,5), range(1,7,1)# Used for testing T/k values
-# Ts, ks = [115], [5] # Default T/k's; use for single/fast image
+N = 3 # 2^N scaling
+# Ts, ks = range(100,151,5), range(1,7,1)# Used for testing T/k values
+Ts, ks = [115], [5] # Default T/k's; use for single/fast image
 
-for file in imr.test_images[-1:]:
+for file in imr.test_images[5:6]:
     print(file)
     img = cv2.imread(file, cv2.IMREAD_COLOR)
     img2=np.array([])

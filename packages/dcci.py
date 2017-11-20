@@ -18,7 +18,8 @@ def Dccix2(img, T=115, k=5):
     imgInterp = np.zeros((lx*2-1, ly*2-1))
     imgInterp[::2,::2] = img2
 
-    imgInterp = interpDiag(imgInterp, T, k)
+    imgInterp = interpDiag(img, imgInterp, T, k)
+    # imgInterp = interpOrth(img, imgInterp, T, k)
     imgInterp = interpOrth(imgInterp, T, k)
 
     imgInterp[imgInterp < 0] = 0
@@ -29,23 +30,37 @@ def Dccix2(img, T=115, k=5):
 
 # Input: The 2x image with black space padding each of the given pixels
 # Output: The same image with the diagonal non-edge pixels interpolated
-def interpDiag(img, T, k):
+def interpDiag(original,img, T, k):
     lx, ly = img.shape
     imgPadded = np.zeros((lx+4,ly+4))# Pad by 1 given pixel (2 real pixels)
     imgPadded[2:-2,2:-2] = img
+
+    # Think about each point in d1 and d2 as the (x,y) of the points diagonally between
+    # each of the pixels being differenced (thus a 4x4 space would become a 3x3 space of 
+    # the pixels diagonal from each 4 surrounding pixels of the original image)
+    d1 = np.abs(original[1:,:-1] - original[:-1,1:])
+    d2 = np.abs(original[1:,1:] - original[:-1,:-1])
 
     # Center at the point to be interpolated, (x,y)
     for x in range(3, lx+1, 2):
         for y in range(3, ly+1, 2):  
             s4x4 = imgPadded[x-3:x+4:2,y-3:y+4:2]
+            d1s = np.sum(d1[x-1:x+2, y-1:y+2]) # 3x3 region of differences around x,y
+            d2s = np.sum(d2[x-1:x+2, y-1:y+2])
+
+            # Get classification
+            diagClass = DiagClassification.SMOOTH
+            if (100*(1+d1s) > T * (1+d2s)):
+                diagClass = DiagClassification.UP_RIGHT
+            elif (100*(1+d2s) > T * (1+d1s)):
+                diagClass = DiagClassification.DOWN_RIGHT
             
-            diagClass,d1, d2 = classifyDiag(s4x4, T)
             if diagClass == DiagClassification.UP_RIGHT:
                 imgPadded[x,y] = upRight(s4x4)
             elif diagClass == DiagClassification.DOWN_RIGHT:
                 imgPadded[x,y] = downRight(s4x4)
             else:
-                imgPadded[x,y] = diagSmooth(s4x4, d1, d2, k)
+                imgPadded[x,y] = diagSmooth(s4x4, d1s, d2s, k)
 
     return imgPadded[2:-2,2:-2]
 
@@ -54,59 +69,66 @@ def interpOrth(img, T, k):
     imgPadded = np.zeros((lx+6,ly+6))
     imgPadded[3:-3,3:-3] = img
     
+
+    # Each (x,y) is the uninterpolated pixel between the diff. It works out that
+    # The [unused] diffs surrounding original or diagonally interpolated pixels
+    # is equal to 0
+    d1 = np.abs(imgPadded[2:-4,3:-3] - imgPadded[4:-2,3:-3])
+    d2 = np.abs(imgPadded[3:-3, 2:-4] - imgPadded[3:-3, 4:-2])
+
     # Center at the point to be interpolated, (x,y), as well as (x-1, y+1)
     for x in range(4, lx+3, 2):
         for y in range(3, ly+3, 2): 
             s7x7 = imgPadded[x-3:x+4,y-3:y+4]
+            d1s = np.sum(d1[x-1:x+2, y-1:y+2])
+            d2s = np.sum(d2[x-1:x+2, y-1:y+2])
+
             # Match classification and interpolate for x,y
-            orthClass, d1, d2 = classifyOrth(s7x7, T)
+            orthClass = OrthClassification.SMOOTH
+            if  (100 * (1 + d1s) > T * (1 + d2s)):
+                orthClass = OrthClassification.HORIZONTAL
+            elif ( 100 * (1 + d2s) > T * (1 + d1s)):
+                orthClass = OrthClassification.VERTICAL
+                
             if orthClass == OrthClassification.HORIZONTAL:
                 imgPadded[x,y] = horizontal(s7x7)
             elif orthClass == OrthClassification.VERTICAL:
                 imgPadded[x,y] = vertical(s7x7)
             else:
-                imgPadded[x,y] = orthSmooth(s7x7, d1, d2, k)
+                imgPadded[x,y] = orthSmooth(s7x7, d1s, d2s, k)
 
     for x in range(3, lx+3, 2):
         for y in range(4, ly+3, 2): 
             s7x7 = imgPadded[x-3:x+4,y-3:y+4]
-            # Match classification and interpolate for x,y
-            orthClass, d1, d2 = classifyOrth(s7x7, T)
+            d1s = np.sum(d1[x-1:x+2, y-1:y+2])
+            d2s = np.sum(d2[x-1:x+2, y-1:y+2])
+
+            orthClass = OrthClassification.SMOOTH
+            if  (100 * (1 + d1s) > T * (1 + d2s)):
+                orthClass = OrthClassification.HORIZONTAL
+            elif ( 100 * (1 + d2s) > T * (1 + d1s)):
+                orthClass = OrthClassification.VERTICAL
+
             if orthClass == OrthClassification.HORIZONTAL:
                 imgPadded[x,y] = horizontal(s7x7)
             elif orthClass == OrthClassification.VERTICAL:
                 imgPadded[x,y] = vertical(s7x7)
             else:
-                imgPadded[x,y] = orthSmooth(s7x7, d1, d2, k)
+                imgPadded[x,y] = orthSmooth(s7x7, d1s, d2s, k)
 
     return imgPadded[3:-3,3:-3]
-
-# Input: 4x4 area
-# Output: Classification
-def classifyDiag(s, T):
-    d1 = np.sum(np.abs(s[1:,:-1] - s[:-1,1:]))
-    d2 = np.sum(np.abs(s[1:,1:] - s[:-1,:-1]))
-
-    if (100*(1+d1) > T * (1+d2)):
-        return DiagClassification.UP_RIGHT, d1, d2
-    elif (100*(1+d2) > T * (1+d1)):
-        return DiagClassification.DOWN_RIGHT, d1, d2
-    else:
-        return DiagClassification.SMOOTH, d1, d2
 
 # Input: 7x7 padded "diamond" area
 # Output: Classification
 def classifyOrth(s2, T):
-    d1 = np.sum(np.abs(s2[1:, -2:] - s2[-1:, -2:]))
-    d2 = np.sum(np.abs(s2[-2:, 1:] - s2[-2:, -1:]))
 
     # Avoiding floating point error
     if  (100 * (1 + d1) > T * (1 + d2)):
-        return OrthClassification.HORIZONTAL, d1, d2
+        return OrthClassification.HORIZONTAL
     elif ( 100 * (1 + d2) > T * (1 + d1)):
-        return OrthClassification.VERTICAL, d1, d2
+        return OrthClassification.VERTICAL
     else:
-        return OrthClassification.SMOOTH, d1, d2
+        return 
 
 
 
