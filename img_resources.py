@@ -1,4 +1,5 @@
  
+rpg_items_sheet = ["./resources/rpg_items/Sheet.png"]
 rpg_items = [
     "./resources/rpg_items/Item__00.png",
     "./resources/rpg_items/Item__01.png",
@@ -89,39 +90,45 @@ pixel_art = [
 pixel_art.extend(rpg_items)
 
 test_images = [
-    "./resources/circle.png",
-    "./resources/diagonal_left_100x100.tif",
-    "./resources/disks_256.png",
-    "./resources/grayscale_test_1.png",
-    "./resources/multi_grayscale_1_100x100.tif",
-    "./resources/plus_100x100.tif",
+    "./resources/circle.png",                   # 0
+    "./resources/diagonal_left_100x100.tif",    # 1
+    "./resources/disks_256.png",                # 2
+    "./resources/grayscale_test_1.png",         # 3
+    "./resources/multi_grayscale_1_100x100.tif",# 4
+    "./resources/plus_100x100.tif",             # 5
 
     # Original HQX test images
-    "./resources/test_original.png",
-    "./resources/mailbox_original.png",
-    "./resources/randam_orig.png",
-    "./resources/sq_orig.png",
+    "./resources/test_original.png",            # 6
+    "./resources/mailbox_original.png",         # 7
+    "./resources/randam_orig.png",              # 8
+    "./resources/sq_orig.png",                  # 9
 ]
 
-real_life = [
+real_life_gray = [
     "./resources/cameraman.tif",
     "./resources/house.tif",
     "./resources/jetplane.tif",
     "./resources/lake.tif",
-    # "./resources/lena_color_256.tif",
-    # "./resources/lena_color_512.tif",
     "./resources/lena_gray_256.tif",
     # "./resources/lena_gray_512.tif",
     "./resources/livingroom.tif",
-    # "./resources/mandril_color.tif",
     "./resources/mandril_gray.tif",
-    # "./resources/peppers_color.tif",
     "./resources/peppers_gray.tif",
     "./resources/pirate.tif",
     "./resources/walkbridge.tif",
     "./resources/woman_blonde.tif",
     "./resources/woman_darkhair.tif"
 ]
+
+real_life_color = [
+    "./resources/lena_color_256.tif",
+    # "./resources/lena_color_512.tif",
+    "./resources/mandril_color.tif",
+    "./resources/peppers_color.tif",
+]
+real_life = []
+real_life.extend(real_life_gray)
+real_life.extend(real_life_color)
 
 all = []
 all.extend(pixel_art)    

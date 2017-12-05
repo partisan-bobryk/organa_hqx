@@ -6,38 +6,55 @@ import img_resources as imr
 # Init
 window_name = "UpScaling"
 
-N = 3 # 2^N scaling
-# Ts, ks = range(100,151,5), range(1,7,1)# Used for testing T/k values
-Ts, ks = [115], [5] # Default T/k's; use for single/fast image
+N = 1 # 2^N scaling
+pad = 4
 
-for file in imr.test_images[5:6]:
+
+# img = np.array(range(0,4))**2
+# img = [img]
+# # img = np.matmul(img,img.transpose())
+# img = np.matmul(np.transpose(img),img)
+# print(f"Original:\n{img}")
+
+# imgO = dcci.Dccix2(img)
+
+# print(f"Output:\n{imgO}")
+
+for file in imr.rpg_items_sheet:
     print(file)
-    img = cv2.imread(file, cv2.IMREAD_COLOR)
-    img2=np.array([])
-    for k in ks:
-        img3 = np.array([])
-        for T in Ts:
-            img2b = dcci.Dccix2(img[:,:,0], T, k)
-            img2g = dcci.Dccix2(img[:,:,1], T, k)
-            img2r = dcci.Dccix2(img[:,:,2], T, k)
+    imgT = cv2.imread(file, cv2.IMREAD_COLOR)
 
-            for i in range(1,N):
-                img2b = dcci.Dccix2(img2b, T, k)
-                img2g = dcci.Dccix2(img2g, T, k)
-                img2r = dcci.Dccix2(img2r, T, k)
-            
-            img4 = np.stack((img2b,img2g,img2r),axis=2)
-            if img3.shape[0] == 0:
-                img3 = img4
-            else:
-                img3 = np.concatenate((img3,img4), axis=1)
-        
-        if img2.shape[0] == 0:
-            img2 = img3
-        else:
-            img2 = np.concatenate((img2,img3), axis=0)
+    y,x,z = imgT.shape
+    img = np.zeros((y+2*pad, x+2*pad,z), dtype=np.uint8)
+    img[pad:-pad,pad:-pad] = imgT
 
-    cv2.imwrite("./output/latest.png", img2)
-    cv2.imshow(f"{window_name} - {file}", img2)
+    imgBlur = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+
+    for n in range(0,N):
+        imgB = dcci.Dccix2(img[:,:,0])
+        imgG = dcci.Dccix2(img[:,:,1])
+        imgR = dcci.Dccix2(img[:,:,2])
+        img = np.stack((imgB, imgG, imgR), axis=2)
+
+        imgBlurB = dcci.Dccix2(imgBlur[:,:,0])
+        imgBlurG = dcci.Dccix2(imgBlur[:,:,1])
+        imgBlurR = dcci.Dccix2(imgBlur[:,:,2])
+        imgBlur = np.stack((imgBlurB, imgBlurG, imgBlurR), axis=2)
+
+        # print(img.shape)
+
+    # print(img.shape)
+    img = img[(2**N)*pad:-(2**N)*pad,(2**N)*pad:-(2**N)*pad]
+    imgBlur = imgBlur[(2**N)*pad:-(2**N)*pad,(2**N)*pad:-(2**N)*pad]
+    # print(imgBlur[:16,-15:-1])
+    img2 = cv2.cvtColor(imgBlur, cv2.COLOR_Lab2BGR)
+
+
+    img2 = cv2.resize(imgT, (0,0), fx=2**N, fy=2**N, interpolation=cv2.INTER_CUBIC)
+    # imgOut = np.concatenate((img,img2), axis=1)
+    cv2.imwrite("./output/latest-dcci.png", img)
+    cv2.imwrite("./output/latest-bicubic.png", img2)
+    cv2.imshow(f"{window_name} - {file}", img)
+    cv2.imshow(f"{window_name} - {file}2", img2)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
