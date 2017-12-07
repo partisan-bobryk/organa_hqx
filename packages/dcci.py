@@ -40,35 +40,53 @@ def interpDiag(original,img, T, k):
     # the pixels diagonal from each 4 surrounding pixels of the original image)
     d1 = np.abs(original[1:,:-1] - original[:-1,1:])
     d2 = np.abs(original[1:,1:] - original[:-1,:-1])
+    d1 = cv2.copyMakeBorder(d1, 1,0,1,0, cv2.BORDER_CONSTANT,value=0)
+    d2 = cv2.copyMakeBorder(d2, 1,0,1,0, cv2.BORDER_CONSTANT,value=0)
 
-    urc, drc, sc = 0,0,0
+    # print(original)
+    # print(d2)
+
+    # d1 = cv2.copyMakeBorder(d1, 2,2,2,2, cv2.BORDER_CONSTANT,value=0)
+    # d2 = cv2.copyMakeBorder(d2, 2,2,2,2, cv2.BORDER_CONSTANT,value=0)
 
     # Center at the point to be interpolated, (x,y)
     for x in range(3, lx+1, 2):
         for y in range(3, ly+1, 2):  
             s4x4 = imgPadded[x-3:x+4:2,y-3:y+4:2] # 4x4 of the original image
-            d1s = np.sum(d1[x-1:x+2, y-1:y+2]) # 3x3 region of differences around x,y
-            d2s = np.sum(d2[x-1:x+2, y-1:y+2])
+            d1s = np.sum(d1[(x-3)//2-1:(x-3)//2+2, (y-3)//2-1:(y-3)//2+2]) # 3x3 region of differences around x,y
+            d2s = np.sum(d2[(x-3)//2-1:(x-3)//2+2, (y-3)//2-1:(y-3)//2+2])
 
+            # print(f"({(x-3)//2},{(y-3)//2}): {d1[(x-3)//2-1:(x-3)//2+2, (y-3)//2-1:(y-3)//2+2]}")
+
+            # if x >= 3+0 and x < 3+3 and y >= 3+0 and y < 3+3:
+                # print(f"({x-3},{y-3}): {d1s} : {d2s}")
+                # print(original[x-1:x+2, y-1:y+2])
+                # print(s4x4)
+                # print(d1[x-1:x+2, y-1:y+2])
+                # print(d2[x-1:x+2, y-1:y+2])
 
             # Get classification
             diagClass = DiagClassification.SMOOTH
-            if (100*(1+d1s) > T * (1+d2s)):
+            if 100*(1+d1s) > T * (1+d2s):
                 diagClass = DiagClassification.UP_RIGHT
-            elif (100*(1+d2s) > T * (1+d1s)):
+            elif 100*(1+d2s) > T * (1+d1s):
                 diagClass = DiagClassification.DOWN_RIGHT
 
+            
+            # imgPadded[x,y] = upRight(s4x4)
+            # imgPadded[x,y] = downRight(s4x4)
+            # imgPadded[x,y] = diagSmooth(s4x4, d1s, d2s, k)
+
             if diagClass == DiagClassification.UP_RIGHT:
-                urc+=1
                 imgPadded[x,y] = upRight(s4x4)
+                # print(f"{(x-3)//2}, {(y-3)//2} up")
             elif diagClass == DiagClassification.DOWN_RIGHT:
-                drc+=1
+                # print(f"{(x-3)//2}, {(y-3)//2} down")
                 imgPadded[x,y] = downRight(s4x4)
             else:
-                sc+=1
+                # print(f"{(x-3)//2}, {(y-3)//2} smooth")
                 imgPadded[x,y] = diagSmooth(s4x4, d1s, d2s, k)
-    print(f"{urc} {drc} {sc}")
-
+                
     return imgPadded[2:-2,2:-2]
 
 def interpOrth(img, T, k):

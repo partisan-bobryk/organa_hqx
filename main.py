@@ -6,8 +6,15 @@ import img_resources as imr
 # Init
 window_name = "UpScaling"
 
-N = 1 # 2^N scaling
+N = 3 # 2^N scaling
 pad = 4
+
+
+# f = np.zeros((32,32,3), dtype=np.uint8)
+
+# f += 64
+# # f *= 2
+# cv2.imwrite("resources/stripes.png", f)
 
 
 # img = np.array(range(0,4))**2
@@ -20,7 +27,7 @@ pad = 4
 
 # print(f"Output:\n{imgO}")
 
-for file in imr.rpg_items_sheet:
+for file in imr.rpg_items:
     print(file)
     imgT = cv2.imread(file, cv2.IMREAD_COLOR)
 
@@ -28,7 +35,7 @@ for file in imr.rpg_items_sheet:
     img = np.zeros((y+2*pad, x+2*pad,z), dtype=np.uint8)
     img[pad:-pad,pad:-pad] = imgT
 
-    imgBlur = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 
     for n in range(0,N):
         imgB = dcci.Dccix2(img[:,:,0])
@@ -36,25 +43,19 @@ for file in imr.rpg_items_sheet:
         imgR = dcci.Dccix2(img[:,:,2])
         img = np.stack((imgB, imgG, imgR), axis=2)
 
-        imgBlurB = dcci.Dccix2(imgBlur[:,:,0])
-        imgBlurG = dcci.Dccix2(imgBlur[:,:,1])
-        imgBlurR = dcci.Dccix2(imgBlur[:,:,2])
-        imgBlur = np.stack((imgBlurB, imgBlurG, imgBlurR), axis=2)
-
-        # print(img.shape)
-
-    # print(img.shape)
     img = img[(2**N)*pad:-(2**N)*pad,(2**N)*pad:-(2**N)*pad]
-    imgBlur = imgBlur[(2**N)*pad:-(2**N)*pad,(2**N)*pad:-(2**N)*pad]
-    # print(imgBlur[:16,-15:-1])
-    img2 = cv2.cvtColor(imgBlur, cv2.COLOR_Lab2BGR)
+    img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR)
 
 
     img2 = cv2.resize(imgT, (0,0), fx=2**N, fy=2**N, interpolation=cv2.INTER_CUBIC)
-    # imgOut = np.concatenate((img,img2), axis=1)
-    cv2.imwrite("./output/latest-dcci.png", img)
-    cv2.imwrite("./output/latest-bicubic.png", img2)
-    cv2.imshow(f"{window_name} - {file}", img)
-    cv2.imshow(f"{window_name} - {file}2", img2)
+    img2 = img2[:-(2**N-1),:-(2**N-1)]
+    b = np.uint8(np.zeros((img.shape[0],4,3)) + (0,0,255))
+
+
+    imgOut = np.concatenate((img,b,img2), axis=1)
+    cv2.imwrite("./output/latest.png", imgOut)
+    # cv2.imwrite("./output/latest-bicubic.png", img2)
+        # cv2.imshow(f"{window_name} - {file}2", img2)
+    cv2.imshow(f"{window_name} (DCCI : Bicubic)- {file}", imgOut)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

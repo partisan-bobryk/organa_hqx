@@ -96,12 +96,13 @@ test_images = [
     "./resources/grayscale_test_1.png",         # 3
     "./resources/multi_grayscale_1_100x100.tif",# 4
     "./resources/plus_100x100.tif",             # 5
+    "./resources/stripes.png",                  # 6
 
     # Original HQX test images
-    "./resources/test_original.png",            # 6
-    "./resources/mailbox_original.png",         # 7
-    "./resources/randam_orig.png",              # 8
-    "./resources/sq_orig.png",                  # 9
+    "./resources/test_original.png",            
+    "./resources/mailbox_original.png",         
+    "./resources/randam_orig.png",              
+    "./resources/sq_orig.png",             
 ]
 
 real_life_gray = [

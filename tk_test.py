@@ -6,13 +6,14 @@ import img_resources as imr
 # Init
 window_name = "UpScaling"
 
-N = 1 # 2^N scaling
-# Ts, ks = range(100,151,5), range(0,7,1)# Used for testing T/k values
-Ts, ks = [115], [5] # Default T/k's; use for single/fast image
+N = 2 # 2^N scaling
+Ts, ks = range(100,151,5), range(0,7,1)# Used for testing T/k values
+# Ts, ks = [115], [5] # Default T/k's; use for single/fast image
 
-for file in imr.rpg_items:
+for file in imr.rpg_items[19:20]:
     print(file)
     img = cv2.imread(file, cv2.IMREAD_COLOR)
+    # img[::2] = 255 - img[::2]
     img2=np.array([])
     for k in ks:
         img3 = np.array([])
