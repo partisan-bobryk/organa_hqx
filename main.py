@@ -27,7 +27,7 @@ pad = 4
 
 # print(f"Output:\n{imgO}")
 
-for file in imr.rpg_items:
+for file in imr.rpg_items_sheet:
     print(file)
     imgT = cv2.imread(file, cv2.IMREAD_COLOR)
 
