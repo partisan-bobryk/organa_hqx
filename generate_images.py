@@ -109,13 +109,6 @@ files = [
 # Init
 window_name = "UpScaling"
 N = 3 # 2^N scaling
-pad = 4
-
-def unpad(img, n):
-    img = np.uint8(img[(2**n)*pad:-(2**n)*pad,(2**n)*pad:-(2**n)*pad])
-    img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR)
-    return img
-
 
 commit = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("utf-8").strip() 
 directory = f"./results/{commit}"
@@ -129,21 +122,12 @@ for file in files:
     # file = "/home/josh/src/organa_hqx" + file[1:]
     filename = re.search(".*\/([^./]+)\.[^.]+", file).groups()[0]
 
-    imgT = cv2.imread(file, cv2.IMREAD_COLOR)
-
-    y,x,z = imgT.shape
-    img = np.zeros((y+2*pad, x+2*pad,z), dtype=np.uint8)   
-    img[pad:-pad,pad:-pad] = imgT
-
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+    img = cv2.imread(file, cv2.IMREAD_COLOR)
 
     for n in range(0,N):
         if np.max(img.shape) > 256 and n > 0:
             break
         print(f"Generating {filename} (x{2**(n+1)})")
 
-        imgB = dcci.Dccix2(img[:,:,0])
-        imgG = dcci.Dccix2(img[:,:,1])
-        imgR = dcci.Dccix2(img[:,:,2])
-        img = np.stack((imgB, imgG, imgR), axis=2)
-        cv2.imwrite(f"{directory}/{filename}_x{2**(n+1)}.png", unpad(img, n+1))
+        img = dcci.Dcci(img)
+        cv2.imwrite(f"{directory}/{filename}_x{2**(n+1)}.png", img)
