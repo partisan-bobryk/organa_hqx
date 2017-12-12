@@ -1,6 +1,7 @@
 from enum import Enum
 import numpy as np
 import cv2
+import packages.organa_shapes as osp
 
 class DiagClassification(Enum):
     UP_RIGHT   = 1
@@ -15,12 +16,12 @@ class OrthClassification(Enum):
 def isColor(img):
     return len(img.shape) == 3
 
-def isSimilarTo(img, shp, sd=5, diff=10):
+def isSimilarTo(img, shp, sd0=5,sd1=5, diff=10):
     """
     Takes an image and a shape of the same size.
 
     The shape contains values greater, less, or equal to 0.
-    Values equal to and less than 0 must be within a given STD[sd] 
+    Values equal to and less than 0 must be within a given STD[sd0/sd1] 
     of themselves but different [diff] than eachother.
 
     Values in the shape less than 0 indicate ignored values.
@@ -34,9 +35,9 @@ def isSimilarTo(img, shp, sd=5, diff=10):
     avgOnes  = np.mean(img[shp>0])  if len(img[shp>0])  > 0 else -diff
     avgZeros = np.mean(img[shp==0]) if len(img[shp==0]) > 0 else -2*diff-1
 
-    if sdOnes > sd:
+    if sdOnes > sd1:
         return False
-    if sdZeros > sd:
+    if sdZeros > sd0:
         return False
     if abs(avgOnes-avgZeros) < diff:
         return False
@@ -85,6 +86,9 @@ def organax2(img, T, k):
     
     return np.swapaxes(imgInterp, 0, 1)
 
+def interpPoints(x0, x1):
+    return (x0+x1)/2
+
 def interpDiag(original,img, T, k):
     """
     Input:  The 2x image with black space padding each of the given pixels
@@ -113,6 +117,19 @@ def interpDiag(original,img, T, k):
 
             d1s = np.sum(d1k)
             d2s = np.sum(d2k)
+            
+            if isSimilarTo(s4x4, osp.SinglePixelA):
+                imgPadded[x,y] = imgPadded[x-1,y-1]
+                continue
+            if isSimilarTo(s4x4, osp.SinglePixelB):
+                imgPadded[x,y] = interpPoints(imgPadded[x+1,y-1],imgPadded[x-1,y-1])
+                continue
+            if isSimilarTo(s4x4, osp.SinglePixelC):
+                imgPadded[x,y] = interpPoints(imgPadded[x-1,y+1],imgPadded[x-1,y-1])
+                continue
+            if isSimilarTo(s4x4, osp.SinglePixelD):
+                imgPadded[x,y] = imgPadded[x-1,y-1]
+                continue
 
             diagClass = DiagClassification.SMOOTH
             if 100*(1+d1s) > T * (1+d2s):
@@ -169,6 +186,19 @@ def interpOrth(img, T, k):
             d1s = d1[x,y] + d1[x+2,y] + d1[x-2,y] + d1[x,y+2] + d1[x,y-2]
             d2s = d2[x,y] + d2[x+2,y] + d2[x-2,y] + d2[x,y+2] + d2[x,y-2]
 
+            if isSimilarTo(s7x7, osp.SinglePixelE, sd1=0):
+                imgPadded[x,y] = imgPadded[x-1,y]
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelF, sd1=0):
+                imgPadded[x,y] = imgPadded[x-1,y]
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelG, sd1=0):
+                imgPadded[x,y] = interpPoints(imgPadded[x-1,y],imgPadded[x,y+1])
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelH, sd1=0):
+                imgPadded[x,y] = interpPoints(imgPadded[x-1,y],imgPadded[x+1,y])
+                continue
+
             # Match classification and interpolate for x,y
             orthClass = OrthClassification.SMOOTH
             if  (100 * (1 + d1s) > T * (1 + d2s)):
@@ -188,6 +218,19 @@ def interpOrth(img, T, k):
             s7x7 = imgPadded[x-3:x+4,y-3:y+4]
             d1s = d1[x,y] + d1[x+2,y] + d1[x-2,y] + d1[x,y+2] + d1[x,y-2]
             d2s = d2[x,y] + d2[x+2,y] + d2[x-2,y] + d2[x,y+2] + d2[x,y-2]
+
+            if isSimilarTo(s7x7, osp.SinglePixelI, sd1=0):
+                imgPadded[x,y] = imgPadded[x,y-1]
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelJ, sd1=0):
+                imgPadded[x,y] = interpPoints(imgPadded[x-1,y],imgPadded[x,y+1])
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelK, sd1=0):
+                imgPadded[x,y] = imgPadded[x,y-1]
+                continue
+            if isSimilarTo(s7x7, osp.SinglePixelL, sd1=0):
+                imgPadded[x,y] = interpPoints(imgPadded[x,y-1],imgPadded[x,y+1])
+                continue
 
             orthClass = OrthClassification.SMOOTH
             if  (100 * (1 + d1s) > T * (1 + d2s)):
