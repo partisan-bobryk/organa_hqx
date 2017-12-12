@@ -15,7 +15,7 @@ class OrthClassification(Enum):
 def isColor(img):
     return len(img.shape) == 3
 
-def Dcci(img, N=1, T=155, k=5):
+def Dcci(img, N=1, T=115, k=5):
     COLOR_PAD = 4
     if isColor(img):
         y,x,z = img.shape
@@ -98,7 +98,6 @@ def interpDiag(original,img, T, k):
             else:
                 imgPadded[x,y] = diagSmooth(s4x4, d1s, d2s, k)
                 
-
     return imgPadded[2:-2,2:-2]
 
 def interpOrth(img, T, k):
