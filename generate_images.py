@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import packages.dcci as dcci
+import packages.organa as organa
 import re
 import os
 import subprocess
@@ -129,5 +129,5 @@ for file in files:
             break
         print(f"Generating {filename} (x{2**(n+1)})")
 
-        img = dcci.Dcci(img)
+        img = organd.Organa(img)
         cv2.imwrite(f"{directory}/{filename}_x{2**(n+1)}.png", img)

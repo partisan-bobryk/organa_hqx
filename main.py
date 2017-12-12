@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import packages.dcci as dcci
+import packages.organa as organa
 import img_resources as imr
 
 # Init
@@ -24,7 +24,7 @@ N = 1 # 2^N scaling
 #                  [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]], dtype=np.uint8)
 
 # for imgT in [timg]:
-#     cv2.imshow(f"{window_name}", dcci.Dcci(imgT))
+#     cv2.imshow(f"{window_name}", organa.Organa(imgT))
 #     cv2.waitKey(0)
 #     cv2.destroyAllWindows()
 
@@ -32,7 +32,7 @@ N = 1 # 2^N scaling
 for file in imr.test_images[7:8]:
     print(file)
     imgT = cv2.imread(file, cv2.IMREAD_COLOR)
-    img = dcci.Dcci(imgT,N)
+    img = organa.Organa(imgT,N)
 
     img2 = cv2.resize(imgT, (0,0), fx=2**N, fy=2**N, interpolation=cv2.INTER_CUBIC)
     img2 = img2[:-(2**N-1),:-(2**N-1)]
