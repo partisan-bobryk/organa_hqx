@@ -15,6 +15,35 @@ class OrthClassification(Enum):
 def isColor(img):
     return len(img.shape) == 3
 
+def isSimilarTo(img, shp, sd=5, diff=10):
+    """
+    Takes an image and a shape of the same size.
+
+    The shape contains values greater, less, or equal to 0.
+    Values equal to and less than 0 must be within a given STD[sd] 
+    of themselves but different [diff] than eachother.
+
+    Values in the shape less than 0 indicate ignored values.
+    """
+    if img.shape != shp.shape:
+        raise ValueError("Shapes mismatch")
+
+    sdOnes  = np.std(img[shp>0])  if len(img[shp>0])  > 0 else 0
+    sdZeros = np.std(img[shp==0]) if len(img[shp==0]) > 0 else 0
+
+    avgOnes  = np.mean(img[shp>0])  if len(img[shp>0])  > 0 else -diff
+    avgZeros = np.mean(img[shp==0]) if len(img[shp==0]) > 0 else -2*diff-1
+
+    if sdOnes > sd:
+        return False
+    if sdZeros > sd:
+        return False
+    if abs(avgOnes-avgZeros) < diff:
+        return False
+    
+    return True
+
+
 def Organa(img, N=1, T=115, k=5):
     COLOR_PAD = 4
     if isColor(img):
@@ -31,7 +60,7 @@ def Organa(img, N=1, T=115, k=5):
         img = img[(2**N)*COLOR_PAD:-(2**N)*COLOR_PAD,(2**N)*COLOR_PAD:-(2**N)*COLOR_PAD]
         img = cv2.cvtColor(img, cv2.COLOR_Lab2BGR)
         return img
-    
+
     return organaN(img, N, T, k)
 
 
